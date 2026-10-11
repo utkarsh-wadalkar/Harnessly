@@ -1,0 +1,1999 @@
+{
+  "$defs": {
+    "ArtifactManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "manifest",
+            "patch",
+            "stdout",
+            "stderr",
+            "trace",
+            "grading",
+            "usage",
+            "environment"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "redaction_status": {
+          "enum": [
+            "pending",
+            "passed",
+            "rejected"
+          ],
+          "title": "Redaction Status",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "visibility": {
+          "enum": [
+            "private",
+            "public"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "attempt_id",
+        "kind",
+        "sha256",
+        "size_bytes",
+        "media_type",
+        "redaction_status",
+        "visibility"
+      ],
+      "title": "ArtifactManifest",
+      "type": "object"
+    },
+    "ArtifactSubmission": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactManifest"
+        },
+        "fencing_token": {
+          "exclusiveMinimum": 0,
+          "title": "Fencing Token",
+          "type": "integer"
+        },
+        "lease_id": {
+          "format": "uuid",
+          "title": "Lease Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lease_id",
+        "fencing_token",
+        "artifact"
+      ],
+      "title": "ArtifactSubmission",
+      "type": "object"
+    },
+    "ArtifactUpload": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "format": "uuid",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "upload_url": {
+          "description": "Short-lived owner/attempt-scoped upload URL.",
+          "title": "Upload Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "upload_url",
+        "expires_at"
+      ],
+      "title": "ArtifactUpload",
+      "type": "object"
+    },
+    "AttemptCompletion": {
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactManifest"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "execution_status": {
+          "enum": [
+            "completed",
+            "timeout",
+            "cancelled",
+            "resource_exhausted",
+            "infrastructure_error",
+            "harness_error",
+            "model_error"
+          ],
+          "title": "Execution Status",
+          "type": "string"
+        },
+        "fencing_token": {
+          "exclusiveMinimum": 0,
+          "title": "Fencing Token",
+          "type": "integer"
+        },
+        "grading_outcome": {
+          "enum": [
+            "pass",
+            "fail",
+            "invalid_patch",
+            "unavailable"
+          ],
+          "title": "Grading Outcome",
+          "type": "string"
+        },
+        "lease_id": {
+          "format": "uuid",
+          "title": "Lease Id",
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/MetricObservation"
+          },
+          "title": "Metrics",
+          "type": "array"
+        }
+      },
+      "required": [
+        "lease_id",
+        "fencing_token",
+        "execution_status",
+        "grading_outcome",
+        "metrics",
+        "artifacts"
+      ],
+      "title": "AttemptCompletion",
+      "type": "object"
+    },
+    "AttemptLease": {
+      "additionalProperties": false,
+      "properties": {
+        "expires_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "fencing_token": {
+          "exclusiveMinimum": 0,
+          "title": "Fencing Token",
+          "type": "integer"
+        },
+        "lease_id": {
+          "format": "uuid",
+          "title": "Lease Id",
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/$defs/AttemptManifest"
+        }
+      },
+      "required": [
+        "manifest",
+        "lease_id",
+        "fencing_token",
+        "expires_at"
+      ],
+      "title": "AttemptLease",
+      "type": "object"
+    },
+    "AttemptManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "format": "uuid",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "budgets": {
+          "$ref": "#/$defs/Budgets"
+        },
+        "candidate": {
+          "$ref": "#/$defs/CandidateConfiguration"
+        },
+        "experiment_id": {
+          "format": "uuid",
+          "title": "Experiment Id",
+          "type": "string"
+        },
+        "network_policy_version": {
+          "title": "Network Policy Version",
+          "type": "string"
+        },
+        "normalization_version": {
+          "title": "Normalization Version",
+          "type": "string"
+        },
+        "plan_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Plan Hash",
+          "type": "string"
+        },
+        "prompt_policy_version": {
+          "title": "Prompt Policy Version",
+          "type": "string"
+        },
+        "prompt_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Prompt Sha256",
+          "type": "string"
+        },
+        "retry_index": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Retry Index",
+          "type": "integer"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sampling_seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Sampling Seed"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "task": {
+          "$ref": "#/$defs/TaskSelection"
+        },
+        "trial_index": {
+          "minimum": 0,
+          "title": "Trial Index",
+          "type": "integer"
+        },
+        "worker_environment_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Worker Environment Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "attempt_id",
+        "experiment_id",
+        "plan_hash",
+        "candidate",
+        "task",
+        "budgets",
+        "trial_index",
+        "retry_index",
+        "sampling_seed",
+        "prompt_policy_version",
+        "prompt_sha256",
+        "network_policy_version",
+        "normalization_version",
+        "worker_environment_sha256"
+      ],
+      "title": "AttemptManifest",
+      "type": "object"
+    },
+    "AttemptProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "fencing_token": {
+          "exclusiveMinimum": 0,
+          "title": "Fencing Token",
+          "type": "integer"
+        },
+        "lease_id": {
+          "format": "uuid",
+          "title": "Lease Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "preparing",
+            "executing",
+            "grading"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lease_id",
+        "fencing_token",
+        "status",
+        "sequence"
+      ],
+      "title": "AttemptProgress",
+      "type": "object"
+    },
+    "Budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_count": {
+          "exclusiveMinimum": 0,
+          "title": "Cpu Count",
+          "type": "number"
+        },
+        "disk_mib": {
+          "exclusiveMinimum": 0,
+          "title": "Disk Mib",
+          "type": "integer"
+        },
+        "inference_allowance_id": {
+          "description": "Server-verified free-tier/paid allowance, not a client attestation.",
+          "format": "uuid",
+          "title": "Inference Allowance Id",
+          "type": "string"
+        },
+        "max_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Cost Usd"
+        },
+        "max_input_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Input Tokens",
+          "type": "integer"
+        },
+        "max_log_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Max Log Bytes",
+          "type": "integer"
+        },
+        "max_output_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Tokens",
+          "type": "integer"
+        },
+        "max_requests": {
+          "exclusiveMinimum": 0,
+          "title": "Max Requests",
+          "type": "integer"
+        },
+        "memory_mib": {
+          "exclusiveMinimum": 0,
+          "title": "Memory Mib",
+          "type": "integer"
+        },
+        "pids": {
+          "exclusiveMinimum": 0,
+          "title": "Pids",
+          "type": "integer"
+        },
+        "wall_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Wall Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "wall_seconds",
+        "cpu_count",
+        "memory_mib",
+        "disk_mib",
+        "pids",
+        "max_requests",
+        "max_input_tokens",
+        "max_output_tokens",
+        "max_log_bytes",
+        "inference_allowance_id"
+      ],
+      "title": "Budgets",
+      "type": "object"
+    },
+    "CandidateConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter_version": {
+          "title": "Adapter Version",
+          "type": "string"
+        },
+        "capabilities": {
+          "additionalProperties": {
+            "enum": [
+              "verified_supported",
+              "verified_unsupported",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "object"
+        },
+        "effective_configuration_sha256": {
+          "description": "Digest of the fully resolved, non-secret harness configuration.",
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Effective Configuration Sha256",
+          "type": "string"
+        },
+        "effective_sampling": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "description": "Actual supported sampling values applied by the adapter, not capability claims.",
+          "title": "Effective Sampling",
+          "type": "object"
+        },
+        "harness_commit": {
+          "pattern": "^[a-f0-9]{40}$",
+          "title": "Harness Commit",
+          "type": "string"
+        },
+        "harness_id": {
+          "title": "Harness Id",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelIdentity"
+        },
+        "runner_image": {
+          "pattern": "^.+@sha256:[a-f0-9]{64}$",
+          "title": "Runner Image",
+          "type": "string"
+        },
+        "unsupported_controls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unsupported Controls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "harness_id",
+        "harness_commit",
+        "adapter_version",
+        "model",
+        "runner_image",
+        "capabilities",
+        "effective_configuration_sha256"
+      ],
+      "title": "CandidateConfiguration",
+      "type": "object"
+    },
+    "Criterion": {
+      "enum": [
+        "reliability",
+        "speed",
+        "monetary_cost",
+        "token_efficiency",
+        "autonomy",
+        "control",
+        "privacy"
+      ],
+      "title": "Criterion",
+      "type": "string"
+    },
+    "DecisionEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Artifact Ids",
+          "type": "array"
+        },
+        "calibrated_probability": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Calibrated Probability"
+        },
+        "calibration_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Calibration Version"
+        },
+        "candidate_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Candidate Ids",
+          "type": "array"
+        },
+        "order_consistent": {
+          "title": "Order Consistent",
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "candidate_a",
+            "candidate_b",
+            "equivalent",
+            "insufficient_evidence"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "probabilities": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Probabilities",
+          "type": "object"
+        },
+        "profile_evidence": {
+          "items": {
+            "$ref": "#/$defs/PreferenceEvidence"
+          },
+          "title": "Profile Evidence",
+          "type": "array"
+        },
+        "reason_codes": {
+          "items": {
+            "enum": [
+              "reliability",
+              "speed",
+              "cost",
+              "token_efficiency",
+              "workflow",
+              "control",
+              "privacy",
+              "coverage"
+            ],
+            "type": "string"
+          },
+          "title": "Reason Codes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "candidate_ids",
+        "outcome",
+        "reason_codes",
+        "probabilities",
+        "calibrated_probability",
+        "calibration_version",
+        "order_consistent",
+        "artifact_ids",
+        "profile_evidence"
+      ],
+      "title": "DecisionEvidence",
+      "type": "object"
+    },
+    "DispatchRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "plan_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Plan Hash",
+          "type": "string"
+        },
+        "plan_id": {
+          "format": "uuid",
+          "title": "Plan Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_id",
+        "plan_hash"
+      ],
+      "title": "DispatchRequest",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "request_id"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "ExecutionConditions": {
+      "additionalProperties": false,
+      "properties": {
+        "network_policy_version": {
+          "minLength": 1,
+          "title": "Network Policy Version",
+          "type": "string"
+        },
+        "normalization_version": {
+          "minLength": 1,
+          "title": "Normalization Version",
+          "type": "string"
+        },
+        "prompt_policy_version": {
+          "minLength": 1,
+          "title": "Prompt Policy Version",
+          "type": "string"
+        },
+        "prompt_snapshot_sha256": {
+          "description": "Digest of resolved task/candidate prompt templates; excludes private preferences.",
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Prompt Snapshot Sha256",
+          "type": "string"
+        },
+        "trial_seeds": {
+          "description": "One seed per trial; null explicitly records an unsupported control.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minItems": 3,
+          "title": "Trial Seeds",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt_policy_version",
+        "prompt_snapshot_sha256",
+        "trial_seeds",
+        "network_policy_version",
+        "normalization_version"
+      ],
+      "title": "ExecutionConditions",
+      "type": "object"
+    },
+    "Experiment": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "plan_id": {
+          "format": "uuid",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "personal",
+            "global"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "completed",
+            "partially_completed",
+            "failed",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "terminal_runs": {
+          "minimum": 0,
+          "title": "Terminal Runs",
+          "type": "integer"
+        },
+        "total_runs": {
+          "exclusiveMinimum": 0,
+          "title": "Total Runs",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "plan_id",
+        "status",
+        "scope",
+        "total_runs",
+        "terminal_runs",
+        "created_at"
+      ],
+      "title": "Experiment",
+      "type": "object"
+    },
+    "ExperimentPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "budgets": {
+          "$ref": "#/$defs/Budgets"
+        },
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/CandidateConfiguration"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Candidates",
+          "type": "array"
+        },
+        "created_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "estimated_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Estimated Cost Usd"
+        },
+        "execution_conditions": {
+          "$ref": "#/$defs/ExecutionConditions"
+        },
+        "expires_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "owner_id": {
+          "format": "uuid",
+          "title": "Owner Id",
+          "type": "string"
+        },
+        "plan_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Plan Hash",
+          "type": "string"
+        },
+        "profile_version_id": {
+          "format": "uuid",
+          "title": "Profile Version Id",
+          "type": "string"
+        },
+        "requested_attempts": {
+          "exclusiveMinimum": 0,
+          "title": "Requested Attempts",
+          "type": "integer"
+        },
+        "scope": {
+          "enum": [
+            "personal",
+            "global"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "approved",
+            "dispatched",
+            "expired",
+            "invalidated"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "suite_version": {
+          "title": "Suite Version",
+          "type": "string"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/TaskSelection"
+          },
+          "minItems": 1,
+          "title": "Tasks",
+          "type": "array"
+        },
+        "trials": {
+          "minimum": 3,
+          "title": "Trials",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "owner_id",
+        "profile_version_id",
+        "suite_version",
+        "candidates",
+        "tasks",
+        "trials",
+        "scope",
+        "budgets",
+        "execution_conditions",
+        "plan_hash",
+        "created_at",
+        "expires_at",
+        "status",
+        "requested_attempts",
+        "estimated_cost_usd"
+      ],
+      "title": "ExperimentPlan",
+      "type": "object"
+    },
+    "HardConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "enum": [
+            "local_inference",
+            "approval_control",
+            "max_elapsed_seconds",
+            "max_cost_usd",
+            "language",
+            "os"
+          ],
+          "title": "Key",
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "explicit",
+            "inferred"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "user_confirmed": {
+          "title": "User Confirmed",
+          "type": "boolean"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "key",
+        "value",
+        "origin",
+        "user_confirmed"
+      ],
+      "title": "HardConstraint",
+      "type": "object"
+    },
+    "Health": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "ok",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "Health",
+      "type": "object"
+    },
+    "Interview": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "awaiting_confirmation",
+            "completed",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "model_id",
+        "status"
+      ],
+      "title": "Interview",
+      "type": "object"
+    },
+    "InterviewMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "InterviewMessage",
+      "type": "object"
+    },
+    "InterviewReply": {
+      "additionalProperties": false,
+      "properties": {
+        "draft": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProfileDraft"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message_id",
+        "text",
+        "draft"
+      ],
+      "title": "InterviewReply",
+      "type": "object"
+    },
+    "LeaderboardEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": {
+          "$ref": "#/$defs/CandidateConfiguration"
+        },
+        "cohort_id": {
+          "format": "uuid",
+          "title": "Cohort Id",
+          "type": "string"
+        },
+        "infrastructure_errors": {
+          "minimum": 0,
+          "title": "Infrastructure Errors",
+          "type": "integer"
+        },
+        "median_elapsed_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Median Elapsed Seconds"
+        },
+        "metric_coverage": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Metric Coverage",
+          "type": "object"
+        },
+        "published_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Published At",
+          "type": "string"
+        },
+        "run_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Run Ids",
+          "type": "array"
+        },
+        "solved": {
+          "minimum": 0,
+          "title": "Solved",
+          "type": "integer"
+        },
+        "success_interval": {
+          "items": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Success Interval",
+          "type": "array"
+        },
+        "suite_version": {
+          "title": "Suite Version",
+          "type": "string"
+        },
+        "task_attempts": {
+          "exclusiveMinimum": 0,
+          "title": "Task Attempts",
+          "type": "integer"
+        },
+        "uncertainty_method": {
+          "title": "Uncertainty Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cohort_id",
+        "candidate",
+        "suite_version",
+        "solved",
+        "task_attempts",
+        "infrastructure_errors",
+        "uncertainty_method",
+        "success_interval",
+        "median_elapsed_seconds",
+        "metric_coverage",
+        "run_ids",
+        "published_at"
+      ],
+      "title": "LeaderboardEntry",
+      "type": "object"
+    },
+    "LeaseClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "available_cpu_count": {
+          "exclusiveMinimum": 0,
+          "title": "Available Cpu Count",
+          "type": "number"
+        },
+        "available_memory_mib": {
+          "exclusiveMinimum": 0,
+          "title": "Available Memory Mib",
+          "type": "integer"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "worker_id": {
+          "format": "uuid",
+          "title": "Worker Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "worker_id",
+        "capabilities",
+        "available_memory_mib",
+        "available_cpu_count"
+      ],
+      "title": "LeaseClaim",
+      "type": "object"
+    },
+    "LeaseUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "fencing_token": {
+          "exclusiveMinimum": 0,
+          "title": "Fencing Token",
+          "type": "integer"
+        },
+        "lease_id": {
+          "format": "uuid",
+          "title": "Lease Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lease_id",
+        "fencing_token"
+      ],
+      "title": "LeaseUpdate",
+      "type": "object"
+    },
+    "MetricObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Artifact Ids",
+          "type": "array"
+        },
+        "missing_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Missing Reason"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "quality": {
+          "enum": [
+            "measured",
+            "verified_capability",
+            "unknown"
+          ],
+          "title": "Quality",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "grader",
+            "worker",
+            "provider",
+            "capability_probe",
+            "unknown"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "unit",
+        "quality",
+        "source",
+        "artifact_ids"
+      ],
+      "title": "MetricObservation",
+      "type": "object"
+    },
+    "ModelIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "title": "Identifier",
+          "type": "string"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "provider_endpoint_id": {
+          "description": "Registry reference; never credentials or a user-supplied URL.",
+          "title": "Provider Endpoint Id",
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unknown if the provider cannot prove an immutable revision.",
+          "title": "Revision"
+        },
+        "revision_kind": {
+          "enum": [
+            "immutable",
+            "mutable_alias",
+            "unknown"
+          ],
+          "title": "Revision Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "identifier",
+        "provider",
+        "provider_endpoint_id",
+        "revision_kind"
+      ],
+      "title": "ModelIdentity",
+      "type": "object"
+    },
+    "PlanApproval": {
+      "additionalProperties": false,
+      "properties": {
+        "approved": {
+          "const": true,
+          "title": "Approved",
+          "type": "boolean"
+        },
+        "plan_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Plan Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_hash",
+        "approved"
+      ],
+      "title": "PlanApproval",
+      "type": "object"
+    },
+    "PlanRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "budgets": {
+          "$ref": "#/$defs/Budgets"
+        },
+        "candidate_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Candidate Ids",
+          "type": "array"
+        },
+        "profile_version_id": {
+          "format": "uuid",
+          "title": "Profile Version Id",
+          "type": "string"
+        },
+        "scope": {
+          "default": "personal",
+          "enum": [
+            "personal",
+            "global"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "suite_version": {
+          "title": "Suite Version",
+          "type": "string"
+        },
+        "task_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Task Ids",
+          "type": "array"
+        },
+        "trials": {
+          "default": 3,
+          "maximum": 20,
+          "minimum": 3,
+          "title": "Trials",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "profile_version_id",
+        "suite_version",
+        "candidate_ids",
+        "task_ids",
+        "budgets"
+      ],
+      "title": "PlanRequest",
+      "type": "object"
+    },
+    "PreferenceEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "criterion": {
+          "$ref": "#/$defs/Criterion"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "message_id",
+        "start",
+        "end",
+        "criterion"
+      ],
+      "title": "PreferenceEvidence",
+      "type": "object"
+    },
+    "ProfileConfirmation": {
+      "additionalProperties": false,
+      "properties": {
+        "confirmed": {
+          "const": true,
+          "title": "Confirmed",
+          "type": "boolean"
+        },
+        "draft_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Draft Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "draft_hash",
+        "confirmed"
+      ],
+      "title": "ProfileConfirmation",
+      "type": "object"
+    },
+    "ProfileDraft": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "items": {
+            "$ref": "#/$defs/HardConstraint"
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/PreferenceEvidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Languages",
+          "type": "array"
+        },
+        "task_distribution": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Task Distribution",
+          "type": "object"
+        },
+        "weights": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "required": [
+        "weights"
+      ],
+      "title": "ProfileDraft",
+      "type": "object"
+    },
+    "ProfileVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "confirmed_at": {
+          "description": "Timezone-aware RFC3339 timestamp; store UTC.",
+          "format": "date-time",
+          "title": "Confirmed At",
+          "type": "string"
+        },
+        "constraints": {
+          "items": {
+            "$ref": "#/$defs/HardConstraint"
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/PreferenceEvidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "extraction_version": {
+          "title": "Extraction Version",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "interview_model": {
+          "title": "Interview Model",
+          "type": "string"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Languages",
+          "type": "array"
+        },
+        "owner_id": {
+          "format": "uuid",
+          "title": "Owner Id",
+          "type": "string"
+        },
+        "status": {
+          "const": "confirmed",
+          "title": "Status",
+          "type": "string"
+        },
+        "task_distribution": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Task Distribution",
+          "type": "object"
+        },
+        "version": {
+          "exclusiveMinimum": 0,
+          "title": "Version",
+          "type": "integer"
+        },
+        "weights": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "required": [
+        "weights",
+        "id",
+        "owner_id",
+        "version",
+        "status",
+        "confirmed_at",
+        "interview_model",
+        "extraction_version"
+      ],
+      "title": "ProfileVersion",
+      "type": "object"
+    },
+    "PublicationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_snapshot_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Evidence Snapshot Sha256",
+          "type": "string"
+        },
+        "experiment_id": {
+          "format": "uuid",
+          "title": "Experiment Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "experiment_id",
+        "evidence_snapshot_sha256"
+      ],
+      "title": "PublicationRequest",
+      "type": "object"
+    },
+    "Recommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "additionalProperties": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "title": "Coverage",
+          "type": "object"
+        },
+        "decisions": {
+          "items": {
+            "$ref": "#/$defs/DecisionEvidence"
+          },
+          "title": "Decisions",
+          "type": "array"
+        },
+        "engine": {
+          "enum": [
+            "laya",
+            "deterministic_fallback",
+            "deterministic_baseline"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "engine_version": {
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "evidence_snapshot_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Evidence Snapshot Sha256",
+          "type": "string"
+        },
+        "exclusions": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Exclusions",
+          "type": "object"
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "fallback_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fallback Reason"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "normalization_version": {
+          "title": "Normalization Version",
+          "type": "string"
+        },
+        "primary_candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CandidateConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_version_id": {
+          "format": "uuid",
+          "title": "Profile Version Id",
+          "type": "string"
+        },
+        "rank_groups": {
+          "description": "Equal ranks remain grouped; incomplete orders may have no primary.",
+          "items": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Rank Groups",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "recommended",
+            "uncertain",
+            "insufficient_evidence",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "profile_version_id",
+        "evidence_snapshot_sha256",
+        "engine",
+        "engine_version",
+        "status",
+        "primary_candidate",
+        "rank_groups",
+        "exclusions",
+        "decisions",
+        "fallback_reason",
+        "normalization_version",
+        "coverage",
+        "explanation"
+      ],
+      "title": "Recommendation",
+      "type": "object"
+    },
+    "RecommendationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "default": "laya",
+          "enum": [
+            "laya",
+            "deterministic_baseline"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "experiment_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Experiment Ids",
+          "type": "array"
+        },
+        "profile_version_id": {
+          "format": "uuid",
+          "title": "Profile Version Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_version_id",
+        "experiment_ids"
+      ],
+      "title": "RecommendationRequest",
+      "type": "object"
+    },
+    "RunDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactManifest"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "execution_status": {
+          "enum": [
+            "queued",
+            "leased",
+            "preparing",
+            "executing",
+            "grading",
+            "completed",
+            "timeout",
+            "cancelled",
+            "resource_exhausted",
+            "infrastructure_error",
+            "harness_error",
+            "model_error"
+          ],
+          "title": "Execution Status",
+          "type": "string"
+        },
+        "grading_outcome": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "fail",
+                "invalid_patch",
+                "unavailable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Grading Outcome"
+        },
+        "manifest": {
+          "$ref": "#/$defs/AttemptManifest"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/MetricObservation"
+          },
+          "title": "Metrics",
+          "type": "array"
+        }
+      },
+      "required": [
+        "manifest",
+        "execution_status",
+        "grading_outcome",
+        "metrics",
+        "artifacts"
+      ],
+      "title": "RunDetail",
+      "type": "object"
+    },
+    "TaskCatalogEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "difficulty": {
+          "enum": [
+            "easy",
+            "medium",
+            "hard"
+          ],
+          "title": "Difficulty",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "language": {
+          "enum": [
+            "typescript",
+            "python"
+          ],
+          "title": "Language",
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "title",
+        "tags",
+        "language",
+        "difficulty"
+      ],
+      "title": "TaskCatalogEntry",
+      "type": "object"
+    },
+    "TaskSelection": {
+      "additionalProperties": false,
+      "properties": {
+        "base_commit": {
+          "pattern": "^[a-f0-9]{40}$",
+          "title": "Base Commit",
+          "type": "string"
+        },
+        "grader_image": {
+          "pattern": "^.+@sha256:[a-f0-9]{64}$",
+          "title": "Grader Image",
+          "type": "string"
+        },
+        "grader_version": {
+          "title": "Grader Version",
+          "type": "string"
+        },
+        "snapshot_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Snapshot Sha256",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "version",
+        "base_commit",
+        "snapshot_sha256",
+        "grader_version",
+        "grader_image"
+      ],
+      "title": "TaskSelection",
+      "type": "object"
+    }
+  },
+  "$id": "urn:harnessarena:contracts:1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

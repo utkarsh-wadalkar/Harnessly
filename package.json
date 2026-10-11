@@ -1,0 +1,12 @@
+{
+  "name": "harnessarena",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "contracts:generate": "node node_modules/openapi-typescript/bin/cli.js packages/contracts/generated/openapi.json --output packages/contracts/generated/api.d.ts --immutable --array-length",
+    "contracts:check": "node node_modules/openapi-typescript/bin/cli.js packages/contracts/generated/openapi.json --output packages/contracts/generated/api.d.ts --immutable --array-length --check"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  }
+}

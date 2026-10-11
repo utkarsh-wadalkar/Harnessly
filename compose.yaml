@@ -1,0 +1,79 @@
+name: harnessarena
+
+services:
+  postgres:
+    image: postgres:17.6
+    profiles: [control]
+    environment:
+      POSTGRES_DB: harnessarena
+      POSTGRES_USER: harnessarena
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD in ignored .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harnessarena -d harnessarena"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [control]
+
+  laya:
+    profiles: [decision]
+    build:
+      # Official source, resolved with git ls-remote on 2026-10-11. Never main/latest.
+      context: "https://github.com/NandhaKishorM/laya.git#68804629e8ccd9d616d48a40e87de9fabbeae069"
+      args:
+        TORCH_INDEX: cpu
+        TORCH_VERSION: "2.14.0"
+    image: harnessarena/laya:68804629-cpu
+    command: ["laya-serve"]
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      LAYA_HOST: "0.0.0.0"
+      LAYA_PORT: "8000"
+      LAYA_DEVICE: cpu
+      LAYA_PRELOAD: "1"
+      LAYA_MODELS: typed-decisions
+      LAYA_DEFAULT_MODEL: typed-decisions
+      LAYA_MAX_LOADED: "1"
+      LAYA_AUTO_TASK: "0"
+      LAYA_THREADS: "2"
+      OMP_NUM_THREADS: "2"
+      LAYA_MAX_CONCURRENT: "1"
+      LAYA_MAX_TOKEN_BUDGET: "1024"
+      LAYA_REVISION: "1a793eb568e6718f15941d08f85432581df534e3"
+      LAYA_SHA256_DIGESTS: ${LAYA_SHA256_DIGESTS:-}
+      LAYA_API_KEY: ${LAYA_API_KEY:?Configure LAYA_API_KEY in ignored .env}
+      HF_HOME: /home/laya/.cache/huggingface
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+    volumes:
+      - laya-model-cache:/home/laya/.cache/huggingface
+    init: true
+    restart: unless-stopped
+    mem_limit: 4g
+    cpus: 2.0
+    pids_limit: 128
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10m
+      retries: 3
+    networks: [decision]
+
+# The API/worker/web applications are specified, not implemented yet. Do not add
+# placeholder services that appear healthy without providing their workflows.
+# Task containers are created per attempt on separate internal-only networks.
+networks:
+  control:
+  decision:
+volumes:
+  postgres-data:
+  laya-model-cache:

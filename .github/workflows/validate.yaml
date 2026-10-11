@@ -1,0 +1,41 @@
+name: Validate planning and feasibility tooling
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -r requirements.lock
+      - run: python -m pip install --no-deps --no-build-isolation -e .
+      - run: python -m pytest
+      - run: python -m scripts.export_contracts --check
+      - run: python -m scripts.validate_project
+      # Live inference and Docker benchmarks require dedicated approved budgets.
+      # CI does not equate offline mocks with live integration validation.
+
+  frontend-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.25.0"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm contracts:check
