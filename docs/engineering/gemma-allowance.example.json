@@ -1,0 +1,12 @@
+{
+  "provider": "google_gemini_api",
+  "model": "gemma-4-26b-a4b-it",
+  "tier": "free",
+  "verified_by": "REPLACE_WITH_OPERATOR",
+  "verified_at": "2000-01-01T00:00:00Z",
+  "expires_at": "2000-01-02T00:00:00Z",
+  "evidence_reference": "REPLACE_WITH_LOCAL_ACCOUNT_QUOTA_AND_TERMS_RECORD",
+  "max_requests": 12,
+  "max_input_tokens": 12000,
+  "max_output_tokens": 2000
+}

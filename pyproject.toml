@@ -7,7 +7,7 @@ name = "harnessarena"
 version = "0.1.0"
 description = "Local-first, evidence-backed coding harness recommendations"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.10,<3"]
+dependencies = ["pydantic>=2.10,<3", "psycopg[binary]>=3.2,<4", "PyYAML>=6,<7"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "jsonschema>=4.23,<5", "PyYAML>=6,<7", "openapi-spec-validator>=0.7,<0.8"]

@@ -56,6 +56,7 @@ def validate_project(root=ROOT):
         "loopback-only LAYA": laya["ports"] == ["127.0.0.1:8001:8000"],
         "CPU-only LAYA": env["LAYA_DEVICE"] == "cpu" and laya["build"]["args"]["TORCH_INDEX"] == "cpu",
         "typed checkpoint only": env["LAYA_MODELS"] == "typed-decisions" and env["LAYA_DEFAULT_MODEL"] == "typed-decisions" and env["LAYA_MAX_LOADED"] == "1" and env["LAYA_AUTO_TASK"] == "0",
+        "typed repository matches revision": json.loads(env.get("LAYA_EXTRA_MODELS", "{}")) == {"typed-decisions": "convaiinnovations/laya-typed-decisions"},
         "bounded LAYA": laya["cpus"] <= 2 and laya["mem_limit"] == "4g" and env["LAYA_MAX_CONCURRENT"] == "1",
         "immutable source/checkpoint pins": bool(re.search(r"#[a-f0-9]{40}$", laya["build"]["context"])) and bool(re.fullmatch(r"[a-f0-9]{40}", env["LAYA_REVISION"])),
         "persistent weights": any("laya-model-cache:" in volume for volume in laya["volumes"]),

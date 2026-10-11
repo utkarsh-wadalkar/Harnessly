@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
+import time
 import urllib.error
 import urllib.request
 import uuid
@@ -40,6 +42,7 @@ class ProbeResult:
     usage: dict
     model: str
     requests: int
+    transport_elapsed_seconds: float
 
 
 def _transport(method, url, headers, body, timeout, max_bytes):
@@ -67,6 +70,7 @@ class GemmaClient:
         self.config = config
         self.transport = transport or _transport
         self.calls = 0
+        self.transport_elapsed_seconds = 0.0
         self.generations_left = 3
         self.output_remaining = config.get("max_output_tokens", 0)
         self._validate_config()
@@ -82,6 +86,44 @@ class GemmaClient:
             value = self.config.get(name)
             if type(value) is not int or not 1 <= value <= maximum:
                 raise GemmaUnavailable("invalid_limits")
+        record = self.config.get("allowance_evidence")
+        if not isinstance(record, dict):
+            raise GemmaUnavailable("missing_allowance_evidence")
+        expected = {
+            "provider", "model", "tier", "verified_by", "verified_at", "expires_at",
+            "evidence_reference", "max_requests", "max_input_tokens", "max_output_tokens",
+        }
+        if set(record) != expected:
+            raise GemmaUnavailable("invalid_allowance_evidence")
+        if (record.get("provider") != "google_gemini_api" or record.get("model") != MODEL or
+                record.get("tier") != "free" or
+                not isinstance(record.get("verified_by"), str) or not record["verified_by"].strip() or
+                not isinstance(record.get("evidence_reference"), str) or not record["evidence_reference"].strip()):
+            raise GemmaUnavailable("invalid_allowance_evidence")
+        try:
+            verified_at = self._utc_datetime(record["verified_at"])
+            expires_at = self._utc_datetime(record["expires_at"])
+        except (TypeError, ValueError):
+            raise GemmaUnavailable("invalid_allowance_evidence") from None
+        now = datetime.now(timezone.utc)
+        if verified_at > now or expires_at <= now or expires_at <= verified_at:
+            raise GemmaUnavailable("allowance_evidence_expired")
+        for name in LIMITS:
+            quota = record.get(name)
+            configured = self.config[name]
+            if type(quota) is not int or quota <= 0:
+                raise GemmaUnavailable("invalid_allowance_evidence")
+            if configured > quota:
+                raise GemmaUnavailable("allowance_exceeds_verified_quota")
+
+    @staticmethod
+    def _utc_datetime(value) -> datetime:
+        if not isinstance(value, str):
+            raise ValueError
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
+            raise ValueError
+        return parsed.astimezone(timezone.utc)
 
     def _request(self, action: str, payload: dict) -> dict:
         if self.calls >= self.config["max_requests"]:
@@ -90,6 +132,7 @@ class GemmaClient:
         url = f"{BASE}{MODEL}:{action}"
         if not url.startswith(BASE) or "?" in url or "#" in url:
             raise GemmaUnavailable("refused_url")
+        started = time.monotonic()
         try:
             status, body = self.transport(
                 "POST", url, {"Content-Type": "application/json", "x-goog-api-key": self.config["api_key"]},
@@ -99,6 +142,8 @@ class GemmaClient:
             raise
         except Exception:
             raise GemmaUnavailable("transport_unavailable") from None
+        finally:
+            self.transport_elapsed_seconds += max(0.0, time.monotonic() - started)
         if len(body) > MAX_BYTES:
             raise GemmaUnavailable("response_too_large", status)
         if status < 200 or status >= 300:
@@ -228,4 +273,4 @@ class GemmaClient:
             profile = ProfileDraft.model_validate(extracted)
         except (ValueError, TypeError, KeyError, ValidationError):
             raise GemmaUnavailable("invalid_extraction") from None
-        return ProbeResult(profile, turns, usage, MODEL, self.calls)
+        return ProbeResult(profile, turns, usage, MODEL, self.calls, self.transport_elapsed_seconds)

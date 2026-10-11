@@ -27,6 +27,7 @@ services:
       # Official source, resolved with git ls-remote on 2026-10-11. Never main/latest.
       context: "https://github.com/NandhaKishorM/laya.git#68804629e8ccd9d616d48a40e87de9fabbeae069"
       args:
+        PYTHON_IMAGE: "python:3.11-slim-trixie@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce"
         TORCH_INDEX: cpu
         TORCH_VERSION: "2.14.0"
     image: harnessarena/laya:68804629-cpu
@@ -39,6 +40,8 @@ services:
       LAYA_DEVICE: cpu
       LAYA_PRELOAD: "1"
       LAYA_MODELS: typed-decisions
+      # This reviewed SHA belongs to the standalone typed repository, not the bundle.
+      LAYA_EXTRA_MODELS: '{"typed-decisions":"convaiinnovations/laya-typed-decisions"}'
       LAYA_DEFAULT_MODEL: typed-decisions
       LAYA_MAX_LOADED: "1"
       LAYA_AUTO_TASK: "0"

@@ -1,4 +1,6 @@
 import json
+import hashlib
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -8,6 +10,19 @@ from prototypes.gemma.probe import run_probe
 
 
 MODEL = "gemma-4-26b-a4b-it"
+_NOW = datetime.now(timezone.utc)
+ALLOWANCE = {
+    "provider": "google_gemini_api",
+    "model": MODEL,
+    "tier": "free",
+    "verified_by": "test operator",
+    "verified_at": (_NOW - timedelta(minutes=1)).isoformat(),
+    "expires_at": (_NOW + timedelta(hours=1)).isoformat(),
+    "evidence_reference": "test-data/account-quota-record.txt",
+    "max_requests": 12,
+    "max_input_tokens": 12000,
+    "max_output_tokens": 2000,
+}
 CONFIG = {
     "api_key": "test-key",
     "model": MODEL,
@@ -15,6 +30,7 @@ CONFIG = {
     "max_requests": 12,
     "max_input_tokens": 12000,
     "max_output_tokens": 2000,
+    "allowance_evidence": ALLOWANCE,
 }
 
 
@@ -40,11 +56,11 @@ def test_native_client_uses_count_tokens_and_preserves_user_history_for_adaptive
                 "criterion": "reliability",
                 "quote": "reliable results",
             }, {
-                "message_id": "00000000-0000-0000-0000-000000000003",
-                "start": 0,
-                "end": 17,
+                "message_id": "00000000-0000-0000-0000-000000000002",
+                "start": 37,
+                "end": 56,
                 "criterion": "privacy",
-                "quote": "I want to approve",
+                "quote": "source code private",
             }],
         }),
     ])
@@ -77,6 +93,7 @@ def test_native_client_uses_count_tokens_and_preserves_user_history_for_adaptive
     assert "00000000-0000-0000-0000-000000000003" in extraction_prompt
     assert [call[3]["generationConfig"]["maxOutputTokens"] for call in generation] == [666, 667, 667]
     assert result.usage["counted_input_tokens"] == 30
+    assert result.transport_elapsed_seconds >= 0
 
 
 def test_gate_fails_closed_before_transport_for_missing_key_or_unverified_eligibility():
@@ -92,6 +109,32 @@ def test_gate_fails_closed_before_transport_for_missing_key_or_unverified_eligib
         else:
             raise AssertionError("expected fail-closed configuration")
         assert calls == []
+
+
+def test_verified_boolean_without_allowance_record_fails_closed_before_transport():
+    from packages.interview.gemma_client import GemmaUnavailable
+    calls = []
+    with pytest.raises(GemmaUnavailable) as error:
+        GemmaClient({key: value for key, value in CONFIG.items() if key != "allowance_evidence"},
+                    transport=lambda *args: calls.append(args)).probe()
+    assert error.value.code == "missing_allowance_evidence"
+    assert calls == []
+
+
+@pytest.mark.parametrize(("change", "code"), [
+    ({"expires_at": (_NOW - timedelta(seconds=1)).isoformat()}, "allowance_evidence_expired"),
+    ({"verified_at": "2026-10-11T10:00:00"}, "invalid_allowance_evidence"),
+    ({"verified_at": (_NOW + timedelta(minutes=1)).isoformat()}, "allowance_evidence_expired"),
+    ({"max_requests": 11}, "allowance_exceeds_verified_quota"),
+    ({"model": "other-model"}, "invalid_allowance_evidence"),
+    ({"api_key": "must-not-be-in-an-allowance-record"}, "invalid_allowance_evidence"),
+])
+def test_allowance_record_is_strict_current_and_covers_configured_quotas(change, code):
+    from packages.interview.gemma_client import GemmaUnavailable
+    record = {**ALLOWANCE, **change}
+    with pytest.raises(GemmaUnavailable) as error:
+        GemmaClient({**CONFIG, "allowance_evidence": record}, transport=lambda *args: None)
+    assert error.value.code == code
 
 
 def test_token_count_over_cap_stops_before_generation():
@@ -260,8 +303,51 @@ def test_cli_writes_safe_unavailable_report_without_reading_unlisted_dotenv_keys
     report = json.loads(content)
     assert code != 0
     assert report["status"] == "unavailable"
-    assert report["error"]["code"] == "eligibility_unverified"
+    assert report["error"]["code"] == "missing_allowance_evidence"
     assert "dotenv-key" not in content and "should-not-appear" not in content
+
+
+def test_cli_free_tier_flag_without_record_never_calls_transport(tmp_path):
+    output = tmp_path / "probe.json"
+    calls = []
+    code = run_probe(output, environ={
+        "GEMMA_API_KEY": "test-key",
+        "GEMMA_FREE_TIER_VERIFIED": "true",
+        "GEMMA_ALLOWANCE_EVIDENCE": "missing-record.json",
+    }, transport=lambda *args: calls.append(args), cwd=tmp_path)
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert code != 0 and calls == []
+    assert report["error"]["code"] == "missing_allowance_evidence"
+    assert report["provenance"]["allowance_status"] == "missing"
+
+
+def test_cli_report_hashes_valid_allowance_record_without_echoing_its_free_text(tmp_path):
+    record_path = tmp_path / "allowance.json"
+    record = {**ALLOWANCE, "verified_by": "private operator name",
+              "evidence_reference": "private/quota-evidence.txt"}
+    raw_record = json.dumps(record).encode()
+    record_path.write_bytes(raw_record)
+    outputs = iter(["question", "adaptive question", json.dumps({
+        "weights": {"reliability": 1.0}, "constraints": [], "task_distribution": {}, "languages": [],
+        "evidence": [{"message_id": "00000000-0000-0000-0000-000000000001", "start": 8, "end": 24,
+                      "criterion": "reliability", "quote": "reliable results"}],
+    })])
+
+    def transport(method, url, headers, body, timeout, max_bytes):
+        if url.endswith(":countTokens"):
+            return 200, _payload({"totalTokens": 5})
+        return 200, _payload({"candidates": [{"content": {"parts": [{"text": next(outputs)}]}}]})
+
+    output = tmp_path / "probe.json"
+    code = run_probe(output, environ={"GEMMA_API_KEY": "test-key", "GEMMA_FREE_TIER_VERIFIED": "true",
+                                      "GEMMA_ALLOWANCE_EVIDENCE": "allowance.json"},
+                     transport=transport, cwd=tmp_path)
+    content = output.read_text(encoding="utf-8")
+    report = json.loads(content)
+    assert code == 0 and report["status"] == "mock_preparation_only"
+    assert report["provenance"]["allowance_status"] == "operator_verified"
+    assert report["provenance"]["allowance_record_sha256"] == hashlib.sha256(raw_record).hexdigest()
+    assert "private operator name" not in content and "private/quota-evidence.txt" not in content
 
 
 def test_prompt_injection_is_forwarded_as_user_data_and_request_limit_counts_all_calls():

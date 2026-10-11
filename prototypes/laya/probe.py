@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import sys
@@ -35,6 +36,11 @@ _SYNTHETIC_STATE = {
         {"candidate": "candidate_b", "latency_ms": 180, "monthly_cost_units": 3, "synthetic": True},
     ],
 }
+
+
+def synthetic_case() -> tuple[dict[str, object], dict[str, object]]:
+    """Return an independent, non-personal typed-choice fixture."""
+    return copy.deepcopy(_SYNTHETIC_STATE), copy.deepcopy(_QUESTION)
 
 
 def _dotenv_values(path: Path = Path(".env")) -> dict[str, str]:
@@ -114,7 +120,8 @@ def run_probe(
             "checkpoint_device": health.checkpoint_device,
             "loaded": list(health.loaded),
         }
-        decision = client.predict(_SYNTHETIC_STATE, _QUESTION)
+        state, questions = synthetic_case()
+        decision = client.predict(state, questions)
         report["typed_decision"] = {
             "model": decision.model,
             "checkpoint": decision.checkpoint,

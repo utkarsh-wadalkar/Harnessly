@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "source_commit": "68804629e8ccd9d616d48a40e87de9fabbeae069",
+  "laya_image_digest": "sha256:24d6df467de12b2af4ea30626d824c177a18203383798fc2f1bc92eaca1db74e",
+  "python_base_image_digest": "sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce",
+  "postgres_image_digest": "sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+  "checkpoint_repository": "convaiinnovations/laya-typed-decisions",
+  "checkpoint_revision": "1a793eb568e6718f15941d08f85432581df534e3",
+  "checkpoint_sha256": {
+    "model.safetensors": "4fa56de72383a9d3efa9cfa78955733c81b9fc8067a587ca4beb82c78107a24e"
+  },
+  "verification": {
+    "timestamp": "2026-10-11T11:31:54.755977+00:00",
+    "action": "verify",
+    "status": "verified",
+    "host": {
+      "ready": true,
+      "checks": {
+        "docker_cli": true,
+        "compose": true,
+        "local_endpoint": true,
+        "linux_engine": true,
+        "cpu_capacity": true,
+        "memory_capacity": true
+      },
+      "cpus": 12.0,
+      "memory_gib": 7.46,
+      "required_cpus": 3,
+      "required_memory_gib": 6
+    },
+    "services": {
+      "ready": true,
+      "postgres": "authenticated",
+      "laya": "typedHTTPverified",
+      "postgres_version": "17.6",
+      "laya_device": "cpu",
+      "laya_checkpoint": "typed-decisions",
+      "laya_revision": "1a793eb568e6718f15941d08f85432581df534e3",
+      "typed_outcome": "candidate_a",
+      "runtime": {
+        "postgres": {
+          "healthy": true,
+          "cpu_cap": 1,
+          "memory_cap_gib": 1,
+          "loopback": true
+        },
+        "laya": {
+          "healthy": true,
+          "cpu_cap": 2,
+          "memory_cap_gib": 4,
+          "loopback": true
+        }
+      }
+    }
+  },
+  "offline_typed_probe": {
+    "timestamp": "2026-10-11T11:31:59.081860Z",
+    "source": "laya.serve@68804629e8ccd9d616d48a40e87de9fabbeae069",
+    "checkpoint": {
+      "name": "typed-decisions",
+      "requested_revision": "1a793eb568e6718f15941d08f85432581df534e3",
+      "served_revision": "1a793eb568e6718f15941d08f85432581df534e3"
+    },
+    "cpu_health": {
+      "status": "ok",
+      "device": "cpu",
+      "device_is_preference": false,
+      "checkpoint_device": "cpu",
+      "loaded": [
+        "typed-decisions"
+      ]
+    },
+    "typed_decision": {
+      "model": "laya-rl-agent",
+      "checkpoint": "typed-decisions",
+      "revision": "1a793eb568e6718f15941d08f85432581df534e3",
+      "probabilities": {
+        "candidate_a": 0.3596,
+        "candidate_b": 0.2405,
+        "equivalent": 0.1787,
+        "insufficient_evidence": 0.2212
+      },
+      "raw_confidence": 0.0248
+    },
+    "outcome": "candidate_a",
+    "verification": "typedHTTPverified"
+  },
+  "limitations": [
+    "Synthetic typed request is not benchmark evidence or ranking-quality validation.",
+    "Resource snapshot is not a peak-memory experiment.",
+    "Full default benchmark workload remains blocked by 8 GiB capacity gate."
+  ]
+}
